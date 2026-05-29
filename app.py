@@ -29,7 +29,7 @@ def chat():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4.1-mini",
             messages=[
                 {"role": "system", "content": "Eres InnoBot, asistente virtual de InnovVentas, tienda de productos tecnológicos. Solo responde preguntas sobre productos, pagos, pedidos, devoluciones y envíos. Si preguntan otra cosa responde: Lo siento, solo puedo ayudarte con consultas de InnovVentas."},
                 {"role": "user", "content": user_input}
