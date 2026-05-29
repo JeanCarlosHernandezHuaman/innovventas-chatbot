@@ -1,22 +1,19 @@
 import os
 from flask import Flask, request, jsonify, render_template
 from azure.ai.projects import AIProjectClient
-from azure.core.credentials import AzureKeyCredential
+from azure.identity import AzureCliCredential
+from openai import AzureOpenAI
 
 app = Flask(__name__)
 
-endpoint   = "https://1515427-7907-resource.services.ai.azure.com/api/projects/1515427-7907"
-my_agent   = "iatrabajomartes"
-my_version = "4"
+API_KEY  = os.environ.get("AZURE_API_KEY")
+endpoint = "https://1515427-7907-resource.openai.azure.com/"
 
-API_KEY = os.environ.get("AZURE_API_KEY")
-
-project_client = AIProjectClient(
-    endpoint=endpoint,
-    credential=AzureKeyCredential(API_KEY),
+client = AzureOpenAI(
+    api_key=API_KEY,
+    azure_endpoint=endpoint,
+    api_version="2024-05-01-preview"
 )
-
-openai_client = project_client.get_openai_client()
 
 @app.route("/")
 def index():
@@ -31,15 +28,14 @@ def chat():
         return jsonify({"response": "Por favor escribe algo."})
 
     try:
-        response = openai_client.responses.create(
-            input=[{"role": "user", "content": user_input}],
-            extra_body={"agent_reference": {
-                "name": my_agent,
-                "version": my_version,
-                "type": "agent_reference"
-            }},
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Eres InnoBot, asistente virtual de InnovVentas, tienda de productos tecnológicos. Solo responde preguntas sobre productos, pagos, pedidos, devoluciones y envíos. Si preguntan otra cosa responde: Lo siento, solo puedo ayudarte con consultas de InnovVentas."},
+                {"role": "user", "content": user_input}
+            ]
         )
-        return jsonify({"response": response.output_text})
+        return jsonify({"response": response.choices[0].message.content})
 
     except Exception as e:
         return jsonify({"response": f"Error: {str(e)}"})
